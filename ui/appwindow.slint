@@ -1,0 +1,34 @@
+import { Button, VerticalBox } from "std-widgets.slint";
+
+export component AppWindow inherits Window {
+    title: "Laporan Bulanan";
+    preferred-width: 360px;
+    preferred-height: 640px;
+
+    in-out property <int> counter: 0;
+    callback request-increase-value();
+
+    VerticalBox {
+        alignment: center;
+        spacing: 16px;
+
+        Text {
+            text: "Laporan Bulanan";
+            font-size: 24px;
+            horizontal-alignment: center;
+        }
+
+        Text {
+            text: "Jumlah klik: \{root.counter}";
+            font-size: 16px;
+            horizontal-alignment: center;
+        }
+
+        Button {
+            text: "Tambah Hitungan";
+            clicked => {
+                root.request-increase-value();
+            }
+        }
+    }
+}

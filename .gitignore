@@ -1,0 +1,17 @@
+/target
+
+# AI & Agent Workspace (local only)
+.agents/
+
+# Reference documentation & scratchpad for AI consumption
+docs/
+
+# Security & Credentials
+.env
+.env.*
+*.env
+*.pem
+*.key
+*.cert
+*.keystore
+*.jks

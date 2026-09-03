@@ -1,7 +1,7 @@
 use rusqlite::{params, Connection, OptionalExtension, Result as SqlResult};
 use std::path::Path;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 pub struct UserProfile {
     pub id: i32,
     pub name: String,

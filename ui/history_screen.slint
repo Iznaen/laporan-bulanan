@@ -81,10 +81,12 @@ component HistoryRow {
 export component HistoryScreen {
     in property <string> period-label;
     in property <[DailyLogEntry]> entries;
+    in property <string> export-status;
 
     callback prev-month();
     callback next-month();
     callback entry-selected(string); // emits date YYYY-MM-DD
+    callback export-excel();
 
     VerticalBox {
         padding: 0px;
@@ -109,6 +111,29 @@ export component HistoryScreen {
             }
 
             Button { text: "▶"; width: 44px; clicked => { root.next-month(); } }
+        }
+
+        // ── Export bar ───────────────────────────────────────────────────
+        HorizontalBox {
+            padding: 8px;
+            padding-left: 12px;
+            padding-right: 12px;
+            spacing: 12px;
+            alignment: start;
+
+            Button {
+                text: "Ekspor Excel (.xlsx)";
+                clicked => { root.export-excel(); }
+            }
+
+            Text {
+                text: root.export-status;
+                font-size: 12px;
+                color: #2e7d32;
+                vertical-alignment: center;
+                horizontal-stretch: 1;
+                wrap: word-wrap;
+            }
         }
 
         Rectangle { height: 1px; background: #e0e0e0; }

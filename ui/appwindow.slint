@@ -74,9 +74,11 @@ export component AppWindow inherits Window {
     // ── History ──────────────────────────────────────────────────────────
     in property <string> history-period-label;
     in property <[DailyLogEntry]> history-entries;
+    in property <string> history-export-status;
     callback navigate-prev-month();
     callback navigate-next-month();
     callback history-entry-selected(string);
+    callback history-export-excel();
 
     VerticalBox {
         padding: 0px;
@@ -114,9 +116,11 @@ export component AppWindow inherits Window {
                 height: 100%;
                 period-label: root.history-period-label;
                 entries: root.history-entries;
+                export-status: root.history-export-status;
                 prev-month => { root.navigate-prev-month(); }
                 next-month => { root.navigate-next-month(); }
                 entry-selected(date) => { root.history-entry-selected(date); }
+                export-excel => { root.history-export-excel(); }
             }
 
             if root.active-tab == Tab.Settings : ProfileScreen {

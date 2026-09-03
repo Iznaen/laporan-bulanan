@@ -1,4 +1,5 @@
 pub mod db;
+pub mod export;
 
 use chrono::{Datelike, Local, NaiveDate, Weekday};
 use db::{DailyLog, Database, UserProfile};
@@ -32,7 +33,7 @@ fn signature_file_path() -> std::path::PathBuf {
 
 // ── Date/time helpers ──────────────────────────────────────────────────────
 
-fn day_name_id(w: Weekday) -> &'static str {
+pub fn day_name_id(w: Weekday) -> &'static str {
     match w {
         Weekday::Mon => "Senin",
         Weekday::Tue => "Selasa",
@@ -72,7 +73,7 @@ fn period_label(year: i32, month: u32) -> String {
 
 /// Computes "X jam Y menit" from "HH:MM" check-in/out strings.
 /// Returns an empty string if either input is missing or unparseable.
-fn total_hours_str(check_in: &str, check_out: &str) -> String {
+pub fn total_hours_str(check_in: &str, check_out: &str) -> String {
     if check_in.is_empty() || check_out.is_empty() {
         return String::new();
     }
@@ -210,6 +211,7 @@ fn load_history(db: &Database, year: i32, month: u32, ui: &AppWindow) {
     let model = Rc::new(VecModel::from(entries));
     ui.set_history_entries(ModelRc::from(model));
     ui.set_history_period_label(period_label(year, month).into());
+    ui.set_history_export_status("".into());
 }
 
 // ── Public entry point ─────────────────────────────────────────────────────
@@ -386,6 +388,34 @@ pub fn create_ui() -> Result<AppWindow, slint::PlatformError> {
                 set_daily_date(&ui, d);
                 load_daily_log(&db_ref, &date_str, &ui);
                 ui.set_active_tab(Tab::Daily);
+            }
+        });
+    }
+
+    {
+        let db_ref = Rc::clone(&db);
+        let hm = Rc::clone(&history_month);
+        let ui_h = ui.as_weak();
+        ui.on_history_export_excel(move || {
+            let ui = ui_h.upgrade().expect("UI dropped");
+            ui.set_history_export_status("Mengekspor...".into());
+            
+            let m = hm.borrow();
+            let year = m.0;
+            let month = m.1;
+            
+            let filename = format!("laporan_bulanan_{}_{:02}.xlsx", year, month);
+            // Default to current directory for desktop. Android would need something else.
+            let mut filepath = std::env::current_dir().unwrap_or_default();
+            filepath.push(&filename);
+            
+            match crate::export::export_excel(&db_ref, year, month, filepath.to_str().unwrap_or(&filename)) {
+                Ok(_) => {
+                    ui.set_history_export_status(format!("Berhasil diekspor ke {}", filename).into());
+                }
+                Err(e) => {
+                    ui.set_history_export_status(format!("Gagal: {}", e).into());
+                }
             }
         });
     }

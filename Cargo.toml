@@ -10,6 +10,7 @@ crate-type = ["cdylib", "rlib"]
 slint = { version = "1.17", features = ["backend-android-activity-06"] }
 rusqlite = { version = "0.31", features = ["bundled"] }
 chrono = "0.4"
+rust_xlsxwriter = "0.99.0"
 
 [build-dependencies]
 slint-build = "1.17"

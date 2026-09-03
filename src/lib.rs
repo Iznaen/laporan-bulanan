@@ -1,3 +1,4 @@
+pub mod db;
 use slint::ComponentHandle;
 
 slint::include_modules!();

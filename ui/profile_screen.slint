@@ -24,10 +24,12 @@ export component ProfileScreen {
             font-weight: 700;
         }
 
-        ScrollView {
+        Flickable {
             preferred-height: root.height - 48px;
+            viewport-height: content.preferred-height;
+            interactive: true;
 
-            VerticalBox {
+            content := VerticalBox {
                 spacing: 14px;
                 padding: 0px;
 

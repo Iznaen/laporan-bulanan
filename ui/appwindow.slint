@@ -84,6 +84,7 @@ export component AppWindow inherits Window {
 
     VerticalBox {
         padding: 0px;
+        padding-top: 35px; // Safe area padding for Android status bar (clock, battery, notch)
         spacing: 0px;
 
         // ── Main content area ────────────────────────────────────────────
@@ -143,13 +144,16 @@ export component AppWindow inherits Window {
 
         // ── Bottom navigation bar ────────────────────────────────────────
         Rectangle {
-            height: 56px;
+            height: 80px; // Increased height to accommodate Android system navigation bar
             background: #ffffff;
 
             Rectangle { y: 0; height: 1px; background: #e0e0e0; }
 
             HorizontalBox {
-                padding: 0px;
+                padding-top: 0px;
+                padding-left: 0px;
+                padding-right: 0px;
+                padding-bottom: 24px; // Safe area padding for Android navbar
                 spacing: 0px;
 
                 NavItem {

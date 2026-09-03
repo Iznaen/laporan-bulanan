@@ -80,10 +80,12 @@ export component DailyScreen {
         Rectangle { height: 1px; background: #e0e0e0; }
 
         // ── Scrollable form ──────────────────────────────────────────────
-        ScrollView {
+        Flickable {
             vertical-stretch: 1;
+            viewport-height: content.preferred-height;
+            interactive: true;
 
-            VerticalBox {
+            content := VerticalBox {
                 padding: 16px;
                 spacing: 12px;
 

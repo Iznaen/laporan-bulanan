@@ -146,10 +146,12 @@ export component HistoryScreen {
         Rectangle { height: 1px; background: #e0e0e0; }
 
         // ── Scrollable list ──────────────────────────────────────────────
-        ScrollView {
+        Flickable {
             vertical-stretch: 1;
+            viewport-height: content.preferred-height;
+            interactive: true;
 
-            VerticalBox {
+            content := VerticalBox {
                 padding: 12px;
                 spacing: 6px;
 

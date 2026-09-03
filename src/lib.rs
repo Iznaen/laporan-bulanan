@@ -12,13 +12,24 @@ slint::include_modules!();
 
 // ── Platform path helpers ──────────────────────────────────────────────────
 
-/// Returns the base directory for all app storage.
+/// Returns the base directory for exports and visible files.
 /// On Android: `/storage/emulated/0/Documents/laporan-bulanan`
-/// On Desktop: `./laporan-bulanan`
 pub fn app_storage_dir() -> std::path::PathBuf {
     #[cfg(target_os = "android")]
     {
         std::path::PathBuf::from("/storage/emulated/0/Documents/laporan-bulanan")
+    }
+    #[cfg(not(target_os = "android"))]
+    {
+        std::path::PathBuf::from("laporan-bulanan")
+    }
+}
+
+/// Fallback path for the database if the main storage dir is inaccessible
+pub fn internal_db_path() -> std::path::PathBuf {
+    #[cfg(target_os = "android")]
+    {
+        std::path::PathBuf::from("/data/user/0/com.roguenine.laporan_bulanan_v2/files")
     }
     #[cfg(not(target_os = "android"))]
     {
@@ -47,8 +58,8 @@ pub fn signature_file_path() -> std::path::PathBuf {
 
 // ── Date/time helpers ──────────────────────────────────────────────────────
 
-pub fn day_name_id(w: Weekday) -> &'static str {
-    match w {
+pub fn day_name_id(wd: Weekday) -> &'static str {
+    match wd {
         Weekday::Mon => "Senin",
         Weekday::Tue => "Selasa",
         Weekday::Wed => "Rabu",
@@ -232,11 +243,21 @@ fn load_history(db: &Database, year: i32, month: u32, ui: &AppWindow) {
 // ── Public entry point ─────────────────────────────────────────────────────
 
 pub fn create_ui() -> Result<AppWindow, slint::PlatformError> {
-    // Make sure storage directories exist
-    init_storage().unwrap_or_else(|e| eprintln!("Warning: Failed to init storage: {}", e));
+    // Make sure storage directories exist (will fail silently if permissions are missing)
+    let _ = init_storage();
 
     let ui = AppWindow::new()?;
-    let db = Rc::new(Database::new(db_path()).expect("Failed to open database"));
+    
+    // Try to open DB in Documents folder. If it fails (due to permissions), fallback to internal storage.
+    let db = match Database::new(db_path()) {
+        Ok(db) => Rc::new(db),
+        Err(_) => {
+            // Fallback to internal storage which always has permissions
+            let _ = std::fs::create_dir_all(internal_db_path());
+            let fallback = internal_db_path().join("laporan_bulanan.db");
+            Rc::new(Database::new(fallback).unwrap_or_else(|_| Database::new(":memory:").unwrap()))
+        }
+    };
     let today = Local::now().date_naive();
 
     // ── Profile: load saved data ─────────────────────────────────────────
@@ -468,7 +489,7 @@ pub fn create_ui() -> Result<AppWindow, slint::PlatformError> {
 
 #[cfg(target_os = "android")]
 #[unsafe(no_mangle)]
-fn android_main(app: slint::android::AndroidApp) {
+pub extern "C" fn android_main(app: slint::android::AndroidApp) {
     slint::android::init(app).unwrap();
     let ui = create_ui().unwrap();
     ui.run().unwrap();

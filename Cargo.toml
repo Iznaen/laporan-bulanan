@@ -20,6 +20,11 @@ slint-build = "1.17"
 package = "com.roguenine.laporan_bulanan"
 build_targets = ["aarch64-linux-android", "x86_64-linux-android"]
 apk_name = "LaporanBulanan"
+permissions = [
+    "android.permission.READ_EXTERNAL_STORAGE",
+    "android.permission.WRITE_EXTERNAL_STORAGE",
+    "android.permission.CAMERA"
+]
 
 [package.metadata.android.sdk]
 target_sdk_version = 33

@@ -1,2 +1,4 @@
+cargo apk build --release
 
+target/release/apk/LaporanBulanan.apk
 

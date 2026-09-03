@@ -12,24 +12,37 @@ slint::include_modules!();
 
 // ── Platform path helpers ──────────────────────────────────────────────────
 
-#[cfg(not(target_os = "android"))]
-fn db_path() -> std::path::PathBuf {
-    std::path::PathBuf::from("laporan_bulanan.db")
+/// Returns the base directory for all app storage.
+/// On Android: `/storage/emulated/0/Documents/laporan-bulanan`
+/// On Desktop: `./laporan-bulanan`
+pub fn app_storage_dir() -> std::path::PathBuf {
+    #[cfg(target_os = "android")]
+    {
+        std::path::PathBuf::from("/storage/emulated/0/Documents/laporan-bulanan")
+    }
+    #[cfg(not(target_os = "android"))]
+    {
+        std::path::PathBuf::from("laporan-bulanan")
+    }
 }
 
-#[cfg(target_os = "android")]
-fn db_path() -> std::path::PathBuf {
-    // On Android, use the app's internal data directory via an env var set by the runtime.
-    let base = std::env::var("ANDROID_DATA").unwrap_or_else(|_| "/data/data".to_string());
-    std::path::Path::new(&base)
-        .join("com.roguenine.laporan_bulanan")
-        .join("laporan_bulanan.db")
+/// Initializes the directory structure requested by the user.
+pub fn init_storage() -> std::io::Result<()> {
+    let base = app_storage_dir();
+    std::fs::create_dir_all(base.join("foto/masuk"))?;
+    std::fs::create_dir_all(base.join("foto/keluar"))?;
+    std::fs::create_dir_all(base.join("ttd"))?;
+    std::fs::create_dir_all(base.join("dokumen/excel"))?;
+    std::fs::create_dir_all(base.join("dokumen/pdf"))?;
+    Ok(())
 }
 
-/// Fixed path for the single signature image managed by the app.
-/// Picking a new signature always overwrites this one file.
-fn signature_file_path() -> std::path::PathBuf {
-    db_path().with_file_name("signature.png")
+pub fn db_path() -> std::path::PathBuf {
+    app_storage_dir().join("laporan_bulanan.db")
+}
+
+pub fn signature_file_path() -> std::path::PathBuf {
+    app_storage_dir().join("ttd/signature.png")
 }
 
 // ── Date/time helpers ──────────────────────────────────────────────────────
@@ -219,6 +232,9 @@ fn load_history(db: &Database, year: i32, month: u32, ui: &AppWindow) {
 // ── Public entry point ─────────────────────────────────────────────────────
 
 pub fn create_ui() -> Result<AppWindow, slint::PlatformError> {
+    // Make sure storage directories exist
+    init_storage().unwrap_or_else(|e| eprintln!("Warning: Failed to init storage: {}", e));
+
     let ui = AppWindow::new()?;
     let db = Rc::new(Database::new(db_path()).expect("Failed to open database"));
     let today = Local::now().date_naive();
@@ -407,9 +423,7 @@ pub fn create_ui() -> Result<AppWindow, slint::PlatformError> {
             let month = m.1;
             
             let filename = format!("laporan_bulanan_{}_{:02}.xlsx", year, month);
-            // Default to current directory for desktop. Android would need something else.
-            let mut filepath = std::env::current_dir().unwrap_or_default();
-            filepath.push(&filename);
+            let filepath = app_storage_dir().join("dokumen").join("excel").join(&filename);
             
             match crate::export::export_excel(&db_ref, year, month, filepath.to_str().unwrap_or(&filename)) {
                 Ok(_) => {
@@ -436,8 +450,7 @@ pub fn create_ui() -> Result<AppWindow, slint::PlatformError> {
             let month = m.1;
             
             let filename = format!("laporan_bulanan_{}_{:02}.pdf", year, month);
-            let mut filepath = std::env::current_dir().unwrap_or_default();
-            filepath.push(&filename);
+            let filepath = app_storage_dir().join("dokumen").join("pdf").join(&filename);
             
             match crate::pdf_export::export_pdf(&db_ref, year, month, filepath.to_str().unwrap_or(&filename)) {
                 Ok(_) => {

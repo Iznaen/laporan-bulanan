@@ -18,6 +18,11 @@ pub fn export_pdf(db: &Database, year: i32, month: u32, filepath: &str) -> Resul
     let mut doc = Document::new(font_family);
     doc.set_title("Laporan Bulanan");
     
+    // Add page margins
+    let mut decorator = genpdf::SimplePageDecorator::new();
+    decorator.set_margins(15); // 15mm margins
+    doc.set_page_decorator(decorator);
+    
     // Default styling
     let mut default_style = style::Style::new();
     default_style.set_font_size(10);

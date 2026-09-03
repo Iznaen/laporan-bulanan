@@ -61,8 +61,16 @@ pub fn export_pdf(db: &Database, year: i32, month: u32, filepath: &str) -> Resul
         elements::Paragraph::new(s).aligned(Alignment::Right).styled(default_style.clone())
     };
     
+    // Helper to add padding to cells (1.5mm top/bottom, 2mm left/right)
+    let cell_text = |s: &str| -> elements::PaddedElement<elements::StyledElement<elements::Paragraph>> {
+        elements::PaddedElement::new(text(s), genpdf::Margins::trbl(1.5, 2.0, 1.5, 2.0))
+    };
+    let cell_bold_text = |s: &str| -> elements::PaddedElement<elements::StyledElement<elements::Paragraph>> {
+        elements::PaddedElement::new(bold_text(s), genpdf::Margins::trbl(1.5, 2.0, 1.5, 2.0))
+    };
+    
     // Helper to box elements for tables
-    let boxed = |e: elements::StyledElement<elements::Paragraph>| -> Box<dyn Element> {
+    let boxed_cell = |e: elements::PaddedElement<elements::StyledElement<elements::Paragraph>>| -> Box<dyn Element> {
         Box::new(e)
     };
     
@@ -85,11 +93,11 @@ pub fn export_pdf(db: &Database, year: i32, month: u32, filepath: &str) -> Resul
     let mut table1 = elements::TableLayout::new(vec![2, 2, 4, 4, 3]);
     table1.set_cell_decorator(elements::FrameCellDecorator::new(true, true, false));
     let _ = table1.push_row(vec![
-        boxed(bold_text("Tanggal")),
-        boxed(bold_text("Hari")),
-        boxed(bold_text("Kegiatan")),
-        boxed(bold_text("Output")),
-        boxed(bold_text("Keterangan")),
+        boxed_cell(cell_bold_text("Tanggal")),
+        boxed_cell(cell_bold_text("Hari")),
+        boxed_cell(cell_bold_text("Kegiatan")),
+        boxed_cell(cell_bold_text("Output")),
+        boxed_cell(cell_bold_text("Keterangan")),
     ]);
     
     let mut current = first_day;
@@ -115,11 +123,11 @@ pub fn export_pdf(db: &Database, year: i32, month: u32, filepath: &str) -> Resul
         }
         
         let _ = table1.push_row(vec![
-            boxed(text(&date_str)),
-            boxed(text(day_name)),
-            boxed(text(&keg)),
-            boxed(text(&out)),
-            boxed(text(&ket)),
+            boxed_cell(cell_text(&date_str)),
+            boxed_cell(cell_text(day_name)),
+            boxed_cell(cell_text(&keg)),
+            boxed_cell(cell_text(&out)),
+            boxed_cell(cell_text(&ket)),
         ]);
         current = current.succ_opt().unwrap();
     }
@@ -148,13 +156,13 @@ pub fn export_pdf(db: &Database, year: i32, month: u32, filepath: &str) -> Resul
     let mut table2 = elements::TableLayout::new(vec![3, 2, 2, 2, 3, 2, 3]);
     table2.set_cell_decorator(elements::FrameCellDecorator::new(true, true, false));
     let _ = table2.push_row(vec![
-        boxed(bold_text("Tanggal")),
-        boxed(bold_text("Hari")),
-        boxed(bold_text("Masuk")),
-        boxed(bold_text("Pulang")),
-        boxed(bold_text("Total Jam")),
-        boxed(bold_text("Paraf")),
-        boxed(bold_text("Ket.")),
+        boxed_cell(cell_bold_text("Tanggal")),
+        boxed_cell(cell_bold_text("Hari")),
+        boxed_cell(cell_bold_text("Masuk")),
+        boxed_cell(cell_bold_text("Pulang")),
+        boxed_cell(cell_bold_text("Total Jam")),
+        boxed_cell(cell_bold_text("Paraf")),
+        boxed_cell(cell_bold_text("Ket.")),
     ]);
     
     current = first_day;
@@ -179,13 +187,13 @@ pub fn export_pdf(db: &Database, year: i32, month: u32, filepath: &str) -> Resul
         }
         
         let _ = table2.push_row(vec![
-            boxed(text(&date_str)),
-            boxed(text(day_name)),
-            boxed(text(&masuk)),
-            boxed(text(&pulang)),
-            boxed(text(&total)),
-            boxed(text(&paraf)),
-            boxed(text(&ket)),
+            boxed_cell(cell_text(&date_str)),
+            boxed_cell(cell_text(day_name)),
+            boxed_cell(cell_text(&masuk)),
+            boxed_cell(cell_text(&pulang)),
+            boxed_cell(cell_text(&total)),
+            boxed_cell(cell_text(&paraf)),
+            boxed_cell(cell_text(&ket)),
         ]);
         current = current.succ_opt().unwrap();
     }

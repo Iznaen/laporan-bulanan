@@ -1,33 +1,128 @@
-import { Button, VerticalBox } from "std-widgets.slint";
+import { VerticalBox, HorizontalBox } from "std-widgets.slint";
+import { ProfileScreen } from "profile_screen.slint";
+
+// Bottom navigation tab enum.
+export enum Tab { Daily, History, Settings }
+
+// A single bottom nav icon-button.
+component NavItem {
+    in property <string> label;
+    in property <bool> active;
+    callback clicked();
+
+    TouchArea {
+        clicked => { root.clicked(); }
+
+        VerticalBox {
+            padding: 6px;
+            spacing: 2px;
+            alignment: center;
+
+            Text {
+                text: label;
+                font-size: 11px;
+                horizontal-alignment: center;
+                color: root.active ? #1565C0 : #757575;
+                font-weight: root.active ? 700 : 400;
+            }
+        }
+    }
+}
 
 export component AppWindow inherits Window {
     title: "Laporan Bulanan";
     preferred-width: 360px;
     preferred-height: 640px;
 
-    in-out property <int> counter: 0;
-    callback request-increase-value();
+    // --- Navigation state ---
+    in-out property <Tab> active-tab: Tab.Settings;
+
+    // --- Profile properties (bound to DB) ---
+    in-out property <string> profile-name;
+    in-out property <string> profile-ni;
+    in-out property <string> profile-role;
+    in-out property <string> profile-work-unit;
+    in-out property <string> profile-signature-path;
+    in-out property <string> profile-status-message;
+
+    // --- Callbacks wired up in lib.rs ---
+    callback save-profile();
+    callback pick-signature();
 
     VerticalBox {
-        alignment: center;
-        spacing: 16px;
+        padding: 0px;
+        spacing: 0px;
 
-        Text {
-            text: "Laporan Bulanan";
-            font-size: 24px;
-            horizontal-alignment: center;
+        // --- Main content area (fills remaining space above nav bar) ---
+        Rectangle {
+            vertical-stretch: 1;
+
+            if root.active-tab == Tab.Settings : ProfileScreen {
+                width: 100%;
+                height: 100%;
+                name <=> root.profile-name;
+                ni <=> root.profile-ni;
+                role <=> root.profile-role;
+                work-unit <=> root.profile-work-unit;
+                signature-path <=> root.profile-signature-path;
+                status-message <=> root.profile-status-message;
+                save-profile => { root.save-profile(); }
+                pick-signature => { root.pick-signature(); }
+            }
+
+            if root.active-tab == Tab.Daily : Text {
+                text: "Lembar Harian (segera hadir)";
+                horizontal-alignment: center;
+                vertical-alignment: center;
+                font-size: 16px;
+                color: #aaaaaa;
+            }
+
+            if root.active-tab == Tab.History : Text {
+                text: "Riwayat (segera hadir)";
+                horizontal-alignment: center;
+                vertical-alignment: center;
+                font-size: 16px;
+                color: #aaaaaa;
+            }
         }
 
-        Text {
-            text: "Jumlah klik: \{root.counter}";
-            font-size: 16px;
-            horizontal-alignment: center;
-        }
+        // --- Bottom navigation bar ---
+        Rectangle {
+            height: 56px;
+            background: #ffffff;
 
-        Button {
-            text: "Tambah Hitungan";
-            clicked => {
-                root.request-increase-value();
+            // Top border line
+            Rectangle {
+                y: 0;
+                height: 1px;
+                background: #e0e0e0;
+            }
+
+            HorizontalBox {
+                padding: 0px;
+                spacing: 0px;
+
+                NavItem {
+                    label: "Harian";
+                    active: root.active-tab == Tab.Daily;
+                    horizontal-stretch: 1;
+                    clicked => { root.active-tab = Tab.Daily; }
+                }
+
+                NavItem {
+                    label: "Riwayat";
+                    active: root.active-tab == Tab.History;
+                    horizontal-stretch: 1;
+                    clicked => { root.active-tab = Tab.History; }
+                }
+
+                NavItem {
+                    label: "Pengaturan";
+                    active: root.active-tab == Tab.Settings;
+                    horizontal-stretch: 1;
+                    clicked => { root.active-tab = Tab.Settings; }
+                }
             }
         }
     }

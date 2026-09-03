@@ -1,0 +1,121 @@
+import { Button, LineEdit, ScrollView, VerticalBox } from "std-widgets.slint";
+
+// A single labeled field row: label on top, text input below.
+component LabeledField {
+    in property <string> label;
+    in-out property <string> value;
+    in property <bool> read-only: false;
+
+    VerticalBox {
+        spacing: 4px;
+        padding: 0px;
+
+        Text {
+            text: label;
+            font-size: 12px;
+            color: #888888;
+        }
+
+        LineEdit {
+            text <=> value;
+            read-only: read-only;
+            font-size: 15px;
+        }
+    }
+}
+
+// The full profile/settings screen.
+export component ProfileScreen {
+    // Bound to AppWindow's profile properties.
+    in-out property <string> name;
+    in-out property <string> ni;
+    in-out property <string> role;
+    in-out property <string> work-unit;
+    in-out property <string> signature-path;
+
+    // Emitted when "Simpan" is pressed.
+    callback save-profile();
+    // Emitted when "Pilih Tanda Tangan" is pressed.
+    callback pick-signature();
+
+    // Status message shown after save ("" = hidden).
+    in property <string> status-message;
+
+    VerticalBox {
+        padding: 16px;
+        spacing: 12px;
+        alignment: start;
+
+        Text {
+            text: "Pengaturan Profil";
+            font-size: 20px;
+            font-weight: 700;
+            horizontal-alignment: left;
+        }
+
+        ScrollView {
+            preferred-height: root.height - 56px - 32px; // leave room for nav bar + padding
+
+            VerticalBox {
+                spacing: 14px;
+                padding: 0px;
+
+                LabeledField {
+                    label: "Nama";
+                    value <=> root.name;
+                }
+
+                LabeledField {
+                    label: "NI (Nomor Induk)";
+                    value <=> root.ni;
+                }
+
+                LabeledField {
+                    label: "Jabatan";
+                    value <=> root.role;
+                }
+
+                LabeledField {
+                    label: "Unit Kerja";
+                    value <=> root.work-unit;
+                }
+
+                // Signature section
+                VerticalBox {
+                    spacing: 4px;
+                    padding: 0px;
+
+                    Text {
+                        text: "Tanda Tangan";
+                        font-size: 12px;
+                        color: #888888;
+                    }
+
+                    LabeledField {
+                        label: "Path Gambar";
+                        value <=> root.signature-path;
+                        read-only: true;
+                    }
+
+                    Button {
+                        text: "Pilih Gambar TTD";
+                        clicked => { root.pick-signature(); }
+                    }
+                }
+
+                // Save button & status
+                Button {
+                    text: "Simpan Profil";
+                    clicked => { root.save-profile(); }
+                }
+
+                if root.status-message != "" : Text {
+                    text: root.status-message;
+                    font-size: 13px;
+                    color: #2e7d32;
+                    horizontal-alignment: center;
+                }
+            }
+        }
+    }
+}

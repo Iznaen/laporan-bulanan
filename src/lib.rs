@@ -1,5 +1,6 @@
 pub mod db;
 pub mod export;
+pub mod pdf_export;
 
 use chrono::{Datelike, Local, NaiveDate, Weekday};
 use db::{DailyLog, Database, UserProfile};
@@ -212,6 +213,7 @@ fn load_history(db: &Database, year: i32, month: u32, ui: &AppWindow) {
     ui.set_history_entries(ModelRc::from(model));
     ui.set_history_period_label(period_label(year, month).into());
     ui.set_history_export_status("".into());
+    ui.set_history_export_pdf_status("".into());
 }
 
 // ── Public entry point ─────────────────────────────────────────────────────
@@ -415,6 +417,34 @@ pub fn create_ui() -> Result<AppWindow, slint::PlatformError> {
                 }
                 Err(e) => {
                     ui.set_history_export_status(format!("Gagal: {}", e).into());
+                }
+            }
+        });
+    }
+
+    {
+        let db_ref = Rc::clone(&db);
+        let hm = Rc::clone(&history_month);
+        let ui_h = ui.as_weak();
+        ui.on_history_export_pdf(move || {
+            let ui = ui_h.upgrade().expect("UI dropped");
+            ui.set_history_export_pdf_status("Mengekspor PDF...".into());
+            ui.set_history_export_status("".into());
+            
+            let m = hm.borrow();
+            let year = m.0;
+            let month = m.1;
+            
+            let filename = format!("laporan_bulanan_{}_{:02}.pdf", year, month);
+            let mut filepath = std::env::current_dir().unwrap_or_default();
+            filepath.push(&filename);
+            
+            match crate::pdf_export::export_pdf(&db_ref, year, month, filepath.to_str().unwrap_or(&filename)) {
+                Ok(_) => {
+                    ui.set_history_export_pdf_status(format!("Berhasil diekspor ke {}", filename).into());
+                }
+                Err(e) => {
+                    ui.set_history_export_pdf_status(format!("Gagal: {}", e).into());
                 }
             }
         });

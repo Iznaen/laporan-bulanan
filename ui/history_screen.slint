@@ -82,11 +82,13 @@ export component HistoryScreen {
     in property <string> period-label;
     in property <[DailyLogEntry]> entries;
     in property <string> export-status;
+    in property <string> export-pdf-status;
 
     callback prev-month();
     callback next-month();
     callback entry-selected(string); // emits date YYYY-MM-DD
     callback export-excel();
+    callback export-pdf();
 
     VerticalBox {
         padding: 0px;
@@ -125,9 +127,14 @@ export component HistoryScreen {
                 text: "Ekspor Excel (.xlsx)";
                 clicked => { root.export-excel(); }
             }
+            
+            Button {
+                text: "Ekspor PDF (.pdf)";
+                clicked => { root.export-pdf(); }
+            }
 
             Text {
-                text: root.export-status;
+                text: root.export-status != "" ? root.export-status : root.export-pdf-status;
                 font-size: 12px;
                 color: #2e7d32;
                 vertical-alignment: center;

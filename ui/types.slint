@@ -1,0 +1,14 @@
+// Shared data types used across multiple screens.
+
+/// Summary of a single day's log entry, used in the monthly history list.
+export struct DailyLogEntry {
+    date: string,           // YYYY-MM-DD (for programmatic use)
+    date-display: string,   // e.g. "1 September"
+    day-name: string,       // e.g. "Senin"
+    check-in: string,       // "HH:MM" or ""
+    check-out: string,      // "HH:MM" or ""
+    total-hours: string,    // "X jam Y menit" or ""
+    activity-desc: string,  // brief activity description or ""
+    is-weekend: bool,
+    has-data: bool,
+}

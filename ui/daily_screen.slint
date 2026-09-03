@@ -1,0 +1,133 @@
+import { Button, ScrollView, VerticalBox, HorizontalBox } from "std-widgets.slint";
+import { LabeledField, ReadOnlyField, SectionHeader } from "widgets.slint";
+
+export component DailyScreen {
+    // Date
+    in-out property <string> date;          // YYYY-MM-DD
+    in property <string> date-display;      // "Senin, 1 September 2026"
+    in property <bool> is-weekend;          // true → show holiday warning strip
+
+    // Absensi
+    in-out property <string> check-in;
+    in-out property <string> check-out;
+    in property <string> total-hours;       // computed by Rust; shown via ReadOnlyField
+    in-out property <string> attendance-note;
+
+    // Kegiatan
+    in-out property <string> activity-desc;
+    in-out property <string> activity-output;
+    in-out property <string> activity-note;
+
+    // Dokumentasi
+    in-out property <string> photo-path;
+
+    // Feedback
+    in property <string> status-message;
+    in property <string> total-hours-error; // non-empty = show format warning
+
+    callback save-daily-log();
+    callback pick-photo();
+    callback prev-day();
+    callback next-day();
+    // Fired whenever check-in or check-out changes so Rust can recalculate.
+    callback recalculate-hours();
+
+    VerticalBox {
+        padding: 0px;
+        spacing: 0px;
+
+        // ── Date navigation bar ──────────────────────────────────────────
+        HorizontalBox {
+            height: 52px;
+            padding: 8px;
+            spacing: 8px;
+            alignment: center;
+
+            Button { text: "◀"; width: 44px; clicked => { root.prev-day(); } }
+
+            Text {
+                text: root.date-display;
+                font-size: 14px;
+                font-weight: 700;
+                horizontal-alignment: center;
+                vertical-alignment: center;
+                horizontal-stretch: 1;
+            }
+
+            Button { text: "▶"; width: 44px; clicked => { root.next-day(); } }
+        }
+
+        // ── Weekend / holiday warning strip ─────────────────────────────
+        if root.is-weekend : Rectangle {
+            background: #fff8e1;
+            border-color: #ffe082;
+            border-width: 1px;
+
+            HorizontalBox {
+                padding: 6px;
+                padding-left: 12px;
+
+                Text {
+                    text: "⚠ Hari Libur / Akhir Pekan — Formulir tetap dapat diisi jika bekerja.";
+                    font-size: 12px;
+                    color: #e65100;
+                    wrap: word-wrap;
+                    horizontal-stretch: 1;
+                }
+            }
+        }
+
+        Rectangle { height: 1px; background: #e0e0e0; }
+
+        // ── Scrollable form ──────────────────────────────────────────────
+        ScrollView {
+            vertical-stretch: 1;
+
+            VerticalBox {
+                padding: 16px;
+                spacing: 12px;
+
+                SectionHeader { text: "Absensi"; }
+                LabeledField {
+                    label: "Jam Masuk (HH:MM)";
+                    value <=> root.check-in;
+                    placeholder: "cth: 07:00";
+                    edited => { root.recalculate-hours(); }
+                }
+                LabeledField {
+                    label: "Jam Pulang (HH:MM)";
+                    value <=> root.check-out;
+                    placeholder: "cth: 16:00";
+                    edited => { root.recalculate-hours(); }
+                }
+                // ReadOnlyField: no cursor, no focus — purely a computed display.
+                ReadOnlyField { label: "Total Jam Kerja"; value: root.total-hours; }
+                // Format warning — shown only when time inputs cannot be parsed.
+                if root.total-hours-error != "" : Text {
+                    text: root.total-hours-error;
+                    font-size: 12px;
+                    color: #c62828;
+                }
+                LabeledField { label: "Keterangan Absensi"; value <=> root.attendance-note; }
+
+                SectionHeader { text: "Kegiatan"; }
+                LabeledField { label: "Kegiatan";            value <=> root.activity-desc; }
+                LabeledField { label: "Output";              value <=> root.activity-output; }
+                LabeledField { label: "Keterangan Kegiatan"; value <=> root.activity-note; }
+
+                SectionHeader { text: "Dokumentasi"; }
+                LabeledField { label: "File Foto"; value <=> root.photo-path; read-only: true; }
+                Button { text: "Pilih Foto"; clicked => { root.pick-photo(); } }
+
+                Button { text: "Simpan Catatan Harian"; clicked => { root.save-daily-log(); } }
+
+                if root.status-message != "" : Text {
+                    text: root.status-message;
+                    font-size: 13px;
+                    color: #2e7d32;
+                    horizontal-alignment: center;
+                }
+            }
+        }
+    }
+}

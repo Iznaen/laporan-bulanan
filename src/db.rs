@@ -178,4 +178,33 @@ impl Database {
         }
         Ok(logs)
     }
+
+    /// Retrieves all daily logs for a given month, ordered by date.
+    /// `year_month` must be in "YYYY-MM" format (e.g. "2026-09").
+    pub fn get_logs_for_month(&self, year_month: &str) -> SqlResult<Vec<DailyLog>> {
+        let mut stmt = self.conn.prepare(
+            "SELECT date, check_in, check_out, attendance_note,
+                    activity_desc, activity_output, activity_note, photo_path
+             FROM daily_logs WHERE date LIKE ?1 ORDER BY date ASC",
+        )?;
+        let pattern = format!("{}%", year_month);
+        let log_iter = stmt.query_map([pattern.as_str()], |row| {
+            Ok(DailyLog {
+                date: row.get(0)?,
+                check_in: row.get(1)?,
+                check_out: row.get(2)?,
+                attendance_note: row.get(3)?,
+                activity_desc: row.get(4)?,
+                activity_output: row.get(5)?,
+                activity_note: row.get(6)?,
+                photo_path: row.get(7)?,
+            })
+        })?;
+
+        let mut logs = Vec::new();
+        for log in log_iter {
+            logs.push(log?);
+        }
+        Ok(logs)
+    }
 }

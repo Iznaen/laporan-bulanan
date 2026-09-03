@@ -1,14 +1,18 @@
 import { VerticalBox, HorizontalBox } from "std-widgets.slint";
 import { ProfileScreen } from "profile_screen.slint";
+import { DailyScreen } from "daily_screen.slint";
+import { HistoryScreen } from "history_screen.slint";
+import { DailyLogEntry } from "types.slint";
 
-// Bottom navigation tab enum.
 export enum Tab { Daily, History, Settings }
 
-// A single bottom nav icon-button.
+// A single bottom navigation tab button.
 component NavItem {
     in property <string> label;
     in property <bool> active;
     callback clicked();
+
+    horizontal-stretch: 1;
 
     TouchArea {
         clicked => { root.clicked(); }
@@ -34,28 +38,86 @@ export component AppWindow inherits Window {
     preferred-width: 360px;
     preferred-height: 640px;
 
-    // --- Navigation state ---
-    in-out property <Tab> active-tab: Tab.Settings;
+    // ── Navigation ───────────────────────────────────────────────────────
+    in-out property <Tab> active-tab: Tab.Daily;
 
-    // --- Profile properties (bound to DB) ---
+    // ── Profile ──────────────────────────────────────────────────────────
     in-out property <string> profile-name;
     in-out property <string> profile-ni;
     in-out property <string> profile-role;
     in-out property <string> profile-work-unit;
     in-out property <string> profile-signature-path;
     in-out property <string> profile-status-message;
-
-    // --- Callbacks wired up in lib.rs ---
     callback save-profile();
     callback pick-signature();
+
+    // ── Daily log ────────────────────────────────────────────────────────
+    in-out property <string> daily-date;
+    in property <string> daily-date-display;
+    in property <bool> daily-is-weekend;
+    in-out property <string> daily-check-in;
+    in-out property <string> daily-check-out;
+    in-out property <string> daily-total-hours;
+    in-out property <string> daily-attendance-note;
+    in-out property <string> daily-activity-desc;
+    in-out property <string> daily-activity-output;
+    in-out property <string> daily-activity-note;
+    in-out property <string> daily-photo-path;
+    in property <string> daily-status-message;
+    in property <string> daily-total-hours-error;
+    callback save-daily-log();
+    callback pick-photo();
+    callback navigate-prev-day();
+    callback navigate-next-day();
+    callback recalculate-hours();
+
+    // ── History ──────────────────────────────────────────────────────────
+    in property <string> history-period-label;
+    in property <[DailyLogEntry]> history-entries;
+    callback navigate-prev-month();
+    callback navigate-next-month();
+    callback history-entry-selected(string);
 
     VerticalBox {
         padding: 0px;
         spacing: 0px;
 
-        // --- Main content area (fills remaining space above nav bar) ---
+        // ── Main content area ────────────────────────────────────────────
         Rectangle {
             vertical-stretch: 1;
+
+            if root.active-tab == Tab.Daily : DailyScreen {
+                width: 100%;
+                height: 100%;
+                date <=> root.daily-date;
+                date-display: root.daily-date-display;
+                is-weekend: root.daily-is-weekend;
+                check-in <=> root.daily-check-in;
+                check-out <=> root.daily-check-out;
+                total-hours <=> root.daily-total-hours;
+                attendance-note <=> root.daily-attendance-note;
+                activity-desc <=> root.daily-activity-desc;
+                activity-output <=> root.daily-activity-output;
+                activity-note <=> root.daily-activity-note;
+                photo-path <=> root.daily-photo-path;
+                status-message: root.daily-status-message;
+                total-hours-error: root.daily-total-hours-error;
+                save-daily-log => { root.save-daily-log(); }
+                pick-photo => { root.pick-photo(); }
+                prev-day => { root.navigate-prev-day(); }
+                next-day => { root.navigate-next-day(); }
+                recalculate-hours => { root.recalculate-hours(); }
+            }
+
+            if root.active-tab == Tab.History : HistoryScreen {
+                width: 100%;
+                height: 100%;
+                period-label: root.history-period-label;
+                entries: root.history-entries;
+                prev-month => { root.navigate-prev-month(); }
+                next-month => { root.navigate-next-month(); }
+                entry-selected(date) => { root.history-entry-selected(date); }
+            }
 
             if root.active-tab == Tab.Settings : ProfileScreen {
                 width: 100%;
@@ -69,35 +131,14 @@ export component AppWindow inherits Window {
                 save-profile => { root.save-profile(); }
                 pick-signature => { root.pick-signature(); }
             }
-
-            if root.active-tab == Tab.Daily : Text {
-                text: "Lembar Harian (segera hadir)";
-                horizontal-alignment: center;
-                vertical-alignment: center;
-                font-size: 16px;
-                color: #aaaaaa;
-            }
-
-            if root.active-tab == Tab.History : Text {
-                text: "Riwayat (segera hadir)";
-                horizontal-alignment: center;
-                vertical-alignment: center;
-                font-size: 16px;
-                color: #aaaaaa;
-            }
         }
 
-        // --- Bottom navigation bar ---
+        // ── Bottom navigation bar ────────────────────────────────────────
         Rectangle {
             height: 56px;
             background: #ffffff;
 
-            // Top border line
-            Rectangle {
-                y: 0;
-                height: 1px;
-                background: #e0e0e0;
-            }
+            Rectangle { y: 0; height: 1px; background: #e0e0e0; }
 
             HorizontalBox {
                 padding: 0px;
@@ -106,21 +147,16 @@ export component AppWindow inherits Window {
                 NavItem {
                     label: "Harian";
                     active: root.active-tab == Tab.Daily;
-                    horizontal-stretch: 1;
                     clicked => { root.active-tab = Tab.Daily; }
                 }
-
                 NavItem {
                     label: "Riwayat";
                     active: root.active-tab == Tab.History;
-                    horizontal-stretch: 1;
                     clicked => { root.active-tab = Tab.History; }
                 }
-
                 NavItem {
                     label: "Pengaturan";
                     active: root.active-tab == Tab.Settings;
-                    horizontal-stretch: 1;
                     clicked => { root.active-tab = Tab.Settings; }
                 }
             }

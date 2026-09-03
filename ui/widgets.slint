@@ -1,0 +1,76 @@
+import { LineEdit, VerticalBox } from "std-widgets.slint";
+
+/// A labeled input field: small grey label above an editable LineEdit.
+/// Forwards the `edited` callback from the inner LineEdit.
+export component LabeledField {
+    in property <string> label;
+    in-out property <string> value;
+    in property <bool> read-only: false;
+    in property <string> placeholder;  // hint text shown when field is empty
+    callback edited(string);           // fired on each keystroke
+
+    VerticalBox {
+        spacing: 4px;
+        padding: 0px;
+
+        Text {
+            text: label;
+            font-size: 12px;
+            color: #888888;
+        }
+
+        LineEdit {
+            text <=> value;
+            read-only: read-only;
+            placeholder-text: placeholder;
+            font-size: 15px;
+            edited(text) => { root.edited(text); }
+        }
+    }
+}
+
+/// A non-interactive display field: label above a styled rectangle with text.
+/// Use this instead of LabeledField for computed/read-only values.
+export component ReadOnlyField {
+    in property <string> label;
+    in property <string> value;
+
+    VerticalBox {
+        spacing: 4px;
+        padding: 0px;
+
+        Text {
+            text: label;
+            font-size: 12px;
+            color: #888888;
+        }
+
+        Rectangle {
+            height: 36px;
+            border-color: #cccccc;
+            border-width: 1px;
+            border-radius: 4px;
+            background: #f0f0f0;
+
+            Text {
+                x: 10px;
+                text: value != "" ? value : "—";
+                vertical-alignment: center;
+                font-size: 15px;
+                color: value != "" ? #424242 : #bdbdbd;
+            }
+        }
+    }
+}
+
+/// A bold, blue section divider label.
+export component SectionHeader {
+    in property <string> text;
+
+    Text {
+        text: text;
+        font-size: 14px;
+        font-weight: 700;
+        color: #1565C0;
+    }
+}
